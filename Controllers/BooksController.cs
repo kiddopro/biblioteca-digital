@@ -24,7 +24,7 @@ namespace BibliotecaDigital.Controllers
             _logger = logger;
         }
 
-        // GET: api/books
+        // endpoint para obtener un listado de libros con opciones de filtro
         [HttpGet]
         public async Task<ActionResult<IEnumerable<LibroResumenDTO>>> GetLibros(
             [FromQuery] string title = null,
@@ -34,29 +34,36 @@ namespace BibliotecaDigital.Controllers
         {
             try
             {
+                // hacemos una consulta para traer todos los libros
                 var query = _context.Libros.AsQueryable();
 
-                // Apply filters
+                // se aplican los filtros segun lo que se reciba por parametro
+
+                // este es un filtro para buscar libros por titulo
                 if (!string.IsNullOrEmpty(title))
                 {
                     query = query.Where(l => l.Titulo.Contains(title));
                 }
 
+                // este es un filtro para buscar libros por ISBN
                 if (!string.IsNullOrEmpty(isbn))
                 {
                     query = query.Where(l => l.ISBN == isbn);
                 }
 
+
+                // este es un filtro para buscar libros por autor
                 if (author.HasValue)
                 {
                     query = query.Where(l => l.AutorId == author.Value);
                 }
-
+                // filtro por genero
                 if (genre.HasValue)
                 {
                     query = query.Where(l => l.GeneroId == genre.Value);
                 }
 
+                // Mandamos los resultados al DTO de resumen
                 var libros = await query
                     .Select(l => new LibroResumenDTO
                     {
@@ -77,22 +84,25 @@ namespace BibliotecaDigital.Controllers
             }
         }
 
-        // GET: api/books/5
+        // Endpoint para obtener los detalles de un libro especificado en su ID
         [HttpGet("{id}")]
         public async Task<ActionResult<LibroDetalleDTO>> GetLibro(int id)
         {
             try
             {
+                // hacemos una consulta para traer todos los libros y buscamos el libro por ID
                 var libro = await _context.Libros
                     .Include(l => l.Autor)
                     .Include(l => l.Genero)
                     .FirstOrDefaultAsync(l => l.Id == id);
 
+                // validamos que se encuentre el libro
                 if (libro == null)
                 {
                     return NotFound();
                 }
 
+                // Si encontramos el libro mandamos los resultados al DTO
                 var libroDetalle = new LibroDetalleDTO
                 {
                     Id = libro.Id,
@@ -126,14 +136,14 @@ namespace BibliotecaDigital.Controllers
             }
         }
 
-        // POST: api/books
+        // Endpoitn para crear un nuevo libro, aca se requiere que el usuario este autenticado
         [HttpPost]
         [Authorize]
         public async Task<ActionResult<Libro>> CreateLibro(LibroDTO libroDto)
         {
             try
             {
-                // Validate if autor and genero exist
+                // Validamos que autor y genero existan
                 var autorExists = await _context.Autores.AnyAsync(a => a.Id == libroDto.AutorId);
                 var generoExists = await _context.Generos.AnyAsync(g => g.Id == libroDto.GeneroId);
 
@@ -142,12 +152,13 @@ namespace BibliotecaDigital.Controllers
                     return BadRequest("El autor o género especificado no existe");
                 }
 
-                // Check if ISBN is unique
+                // Chequeamos que el ISBN no exista
                 if (await _context.Libros.AnyAsync(l => l.ISBN == libroDto.ISBN))
                 {
                     return BadRequest("El ISBN ya existe");
                 }
 
+                // Cremos el libro con los datos que nos proporcionaron
                 var libro = new Libro
                 {
                     Titulo = libroDto.Titulo,
@@ -160,11 +171,15 @@ namespace BibliotecaDigital.Controllers
                     GeneroId = libroDto.GeneroId
                 };
 
+                // Agregamos el libro a la base de datos
                 _context.Libros.Add(libro);
                 await _context.SaveChangesAsync();
 
+                // Registramos este evento en el log
                 _logger.LogInformation("Libro creado en Supabase: {Titulo}", libro.Titulo);
 
+
+                // Damos una respuesta con el nuevo libro
                 return CreatedAtAction(nameof(GetLibro), new { id = libro.Id }, libro);
             }
             catch (Exception ex)
@@ -174,20 +189,21 @@ namespace BibliotecaDigital.Controllers
             }
         }
 
-        // PUT: api/books/5
+        // Metodo para actualizar un libro
         [HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> UpdateLibro(int id, LibroDTO libroDto)
         {
             try
             {
+                // Buscamos el libro por ID
                 var libro = await _context.Libros.FindAsync(id);
                 if (libro == null)
                 {
                     return NotFound();
                 }
 
-                // Validate if autor and genero exist
+                // Validamos que genero y autor existan
                 var autorExists = await _context.Autores.AnyAsync(a => a.Id == libroDto.AutorId);
                 var generoExists = await _context.Generos.AnyAsync(g => g.Id == libroDto.GeneroId);
 
@@ -196,11 +212,13 @@ namespace BibliotecaDigital.Controllers
                     return BadRequest("El autor o género especificado no existe");
                 }
 
-                // Check if ISBN is unique (if changed)
+                // Verificamos si el ISBN es unico o se modifico
                 if (libro.ISBN != libroDto.ISBN && await _context.Libros.AnyAsync(l => l.ISBN == libroDto.ISBN))
                 {
                     return BadRequest("El ISBN ya existe");
                 }
+
+                // Actualizamos los datos del libro
 
                 libro.Titulo = libroDto.Titulo;
                 libro.Resumen = libroDto.Resumen;
@@ -211,8 +229,11 @@ namespace BibliotecaDigital.Controllers
                 libro.AutorId = libroDto.AutorId;
                 libro.GeneroId = libroDto.GeneroId;
 
+                // Guardamos los cambios
                 await _context.SaveChangesAsync();
 
+
+                // Registramos este cambio en el log
                 _logger.LogInformation("Libro actualizado en Supabase: {Id}", id);
 
                 return NoContent();
@@ -224,22 +245,25 @@ namespace BibliotecaDigital.Controllers
             }
         }
 
-        // DELETE: api/books/5
+        // empoint para eliminar un libro
         [HttpDelete("{id}")]
         [Authorize]
         public async Task<IActionResult> DeleteLibro(int id)
         {
             try
             {
+                // Buscamos el libro por ID
                 var libro = await _context.Libros.FindAsync(id);
                 if (libro == null)
                 {
                     return NotFound();
                 }
 
+                // Eliminamos el libro
                 _context.Libros.Remove(libro);
                 await _context.SaveChangesAsync();
 
+                // Registramos este cambio en el log
                 _logger.LogInformation("Libro eliminado de Supabase: {Id}", id);
 
                 return NoContent();

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+//TODO: Documentar 
 namespace BibliotecaDigital.Controllers
 {
     [Route("api/[controller]")]
@@ -22,12 +23,13 @@ namespace BibliotecaDigital.Controllers
             _logger = logger;
         }
 
-        // GET: api/authors
+        // Metodo para obtener todos los autores
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AutorConLibrosDTO>>> GetAutores()
         {
             try
             {
+                // Hacemos una consulta para traer todos los autores
                 var autores = await _context.Autores
                     .Select(a => new AutorConLibrosDTO
                     {
@@ -38,6 +40,7 @@ namespace BibliotecaDigital.Controllers
                     })
                     .ToListAsync();
 
+                // devolvemos la lista de autores
                 return Ok(autores);
             }
             catch (Exception ex)
