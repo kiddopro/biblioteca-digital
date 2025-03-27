@@ -14,7 +14,7 @@ API para la gestión de una biblioteca digital desarrollada con C# .NET Core, En
    - git clone [https://github.com/kiddopro/biblioteca-digital.git](https://github.com/kiddopro/biblioteca-digital.git)
    - `cd biblioteca-digital`
 2. **Configurar PostgreSQL local:**
-   - Crear una base de datos llamada `BibliotecaDigital`:
+   - Crear una base de datos llamada `BibliotecaDigital`.
 3. **Configurar la cadena de conexión:**
    - Abrir el archivo `appsettings.json`
    - Actualizar la cadena de conexión `DefaultConnection` con tus credenciales locales: `"DefaultConnection": "Host=localhost;Port=5432;Database=BibliotecaDigital;Username=postgres;Password=tu_contraseña"`
