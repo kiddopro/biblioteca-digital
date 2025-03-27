@@ -1,5 +1,6 @@
 namespace BibliotecaDigital.DTOs
 {
+    // DTO para mostrar un genero
     public class GeneroDTO
     {
         public int Id { get; set; }

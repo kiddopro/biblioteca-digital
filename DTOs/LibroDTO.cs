@@ -1,5 +1,6 @@
 namespace BibliotecaDigital.DTOs
 {
+    // DTO para mostrar un libro
     public class LibroDTO
     {
         public int Id { get; set; }
@@ -13,6 +14,7 @@ namespace BibliotecaDigital.DTOs
         public int GeneroId { get; set; }
     }
 
+    // DTO para mostrar resumen de un libro
     public class LibroResumenDTO
     {
         public int Id { get; set; }
@@ -22,6 +24,7 @@ namespace BibliotecaDigital.DTOs
         public bool Disponible { get; set; }
     }
 
+    // DTO para mostrar detalle de un libro
     public class LibroDetalleDTO
     {
         public int Id { get; set; }
